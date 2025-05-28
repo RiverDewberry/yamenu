@@ -1,0 +1,54 @@
+{
+    "entries": [
+        ["add entries in the config file", "", ""],
+        ["in ~/.config/yamenu/config.json", "", ""]
+    ],
+
+    "font": "",
+
+    "colors": {
+        "background": "black",
+        "border": "darkgray",
+        "input": "lightgray",
+        "no_input": "darkgray",
+        "bar": "darkgray",
+        "dot": "darkgray",
+        "selected_cmd": "lightgray",
+        "unselected_cmd": "gray",
+        "no_cmd": "darkgray"
+    },
+
+    "font_size": 20,
+    "letter_spacing": 2,
+    "cmd_spacing": 4,
+
+    "screen_width": 500,
+    "screen_height": 250,
+
+    "left_gap": 14,
+    "top_gap": 14,
+    "right_gap": 4,
+    "bottom_gap": 14,
+
+    "left_border": 4,
+    "top_border": 4,
+    "right_border": 4,
+    "bottom_border": 4,
+
+    "bar_top_gap": 4,
+    "bar_height": 4,
+    "bar_bottom_gap": 4,
+
+    "dot_size": 8,
+    "dot_gap_left": 6,
+    "dot_gap_top": 6,
+
+    "input_offset": 0,
+    "command_offset": 20,
+
+    "no_input_text": "enter text",
+    "max_input_len": 20,
+
+    "cursor_on_time": 60,
+    "cursor_off_time": 30
+}

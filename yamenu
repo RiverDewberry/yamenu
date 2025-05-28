@@ -44,9 +44,13 @@ try:
     CONFIG = json.load(config_file)
     config_file.close()
 except:
-    print("exception")
+    print("exception while loading config")
 
-COMMANDS = getConfigVal(CONFIG, [], "entries")
+COMMANDS = getConfigVal(CONFIG,
+    [
+        ["add entries in the config file", "", ""],
+        ["in ~/.config/yamenu/config.json", "", ""]
+    ], "entries")
 
 FONT_SRC = getConfigVal(CONFIG, "", "font")
 
@@ -81,7 +85,7 @@ INPUT_OFFSET = getConfigVal(CONFIG, 2, "input_offset")
 COMMAND_OFFSET = getConfigVal(CONFIG, 20, "command_offset")
 
 NO_INPUT_TEXT = getConfigVal(CONFIG, "Enter text", "no_input_text")
-MAX_INPUT_LEN = getConfigVal(CONFIG, 18, "max_input_len")
+MAX_INPUT_LEN = getConfigVal(CONFIG, 20, "max_input_len")
 
 CURSOR_ON_TIME = getConfigVal(CONFIG, 45, "cursor_on_time")
 CURSOR_OFF_TIME = getConfigVal(CONFIG, 45, "cursor_off_time")
