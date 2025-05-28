@@ -1,7 +1,12 @@
 #!/usr/bin/python
 import pyray as pr
 import os as os
+import json as json
 # imports
+
+#gets val form a dict if its key exists, otherwise uses a default val
+def getConfigVal(dictFrom: dict, defaultVal, key: str):
+    return defaultVal if not key in dictFrom else dictFrom[key]
 
 PYRAY_COLORS = {
     "darkgray" : pr.DARKGRAY,
@@ -30,63 +35,106 @@ PYRAY_COLORS = {
 }
 
 #config vars
-# a list of all available commands and their aliases and search terms
-COMMANDS: list = [
-    ["ff", "firefox"],
-    ["st", "steam"],
-    ["vi", "neovim", "alacritty -T neovim -e nvim"],
-    ["dsc", "discord"],
-    ["obs"],
-    ["lo", "libreoffice"],
-    ["mc", "minecraft", "minecraft-launcher"],
-    ["tty", "", "alacritty"]
-]
-
 CONFIG_LOCATION = "config.json"
 
-FONT_SRC = "startmenu.ttf"
+CONFIG = {}
 
-FONT_SIZE = 20
-CMD_SPACING = 4
+try:
+    config_file = open(CONFIG_LOCATION, "r")
+    CONFIG = json.load(config_file)
+    config_file.close()
+except:
+    print("exception")
 
-SCREEN_WIDTH = 400
-SCREEN_HEIGHT = 200
+COMMANDS = getConfigVal(CONFIG, [], "entries")
 
-LEFT_GAP = 14
-TOP_GAP = 14
-RIGHT_GAP = 4
-BOTTOM_GAP = 14
+FONT_SRC = getConfigVal(CONFIG, "", "font")
 
-LEFT_BORDER = 4
-TOP_BORDER = 4
-RIGHT_BORDER = 4
-BOTTOM_BORDER = 4
+FONT_SIZE = getConfigVal(CONFIG, 20, "font_size")
+LETTER_SPACING = getConfigVal(CONFIG, 2, "letter_spacing")
+CMD_SPACING = getConfigVal(CONFIG, 4, "cmd_spacing")
 
-BAR_TOP_GAP = 4
-BAR_HEIGHT = 4
-BAR_BOTTOM_GAP = 4
+SCREEN_WIDTH = getConfigVal(CONFIG, 400, "screen_width")
+SCREEN_HEIGHT = getConfigVal(CONFIG, 200, "screen_height")
+
+LEFT_GAP = getConfigVal(CONFIG, 14, "left_gap")
+TOP_GAP = getConfigVal(CONFIG, 14, "top_gap")
+RIGHT_GAP = getConfigVal(CONFIG, 4, "right_gap")
+BOTTOM_GAP = getConfigVal(CONFIG, 14, "bottom_gap")
+
+LEFT_BORDER = getConfigVal(CONFIG, 4, "left_border")
+TOP_BORDER = getConfigVal(CONFIG, 4, "top_border")
+RIGHT_BORDER = getConfigVal(CONFIG, 4, "right_border")
+BOTTOM_BORDER = getConfigVal(CONFIG, 4, "bottom_border")
+
+BAR_TOP_GAP = getConfigVal(CONFIG, 4, "bar_top_gap")
+BAR_HEIGHT = getConfigVal(CONFIG, 4, "bar_height")
+BAR_BOTTOM_GAP = getConfigVal(CONFIG, 4, "bar_bottom_gap")
 
 TOTAL_BAR_HEIGHT = BAR_TOP_GAP + BAR_BOTTOM_GAP + BAR_HEIGHT
 
-DOT_SIZE = 8
-DOT_GAP_LEFT = 6
-DOT_GAP_TOP = 6
+DOT_SIZE = getConfigVal(CONFIG, 8, "dot_size")
+DOT_GAP_LEFT = getConfigVal(CONFIG, 6, "dot_gap_left")
+DOT_GAP_TOP = getConfigVal(CONFIG, 6, "dot_gap_top")
 
-INPUT_OFFSET = 0
-COMMAND_OFFSET = 20
+INPUT_OFFSET = getConfigVal(CONFIG, 2, "input_offset")
+COMMAND_OFFSET = getConfigVal(CONFIG, 20, "command_offset")
 
-NO_INPUT_TEXT = "Enter text"
-MAX_INPUT_LEN = 18
+NO_INPUT_TEXT = getConfigVal(CONFIG, "Enter text", "no_input_text")
+MAX_INPUT_LEN = getConfigVal(CONFIG, 18, "max_input_len")
 
-BACKGROUND_COLOR = PYRAY_COLORS["white"]
-BORDER_COLOR = PYRAY_COLORS["lightgray"]
-INPUT_COLOR = PYRAY_COLORS["darkpurple"]
-NO_INPUT_COLOR = PYRAY_COLORS["purple"]
-BAR_COLOR = PYRAY_COLORS["lightgray"]
-DOT_COLOR = PYRAY_COLORS["purple"]
-SELECTED_CMD_COLOR = PYRAY_COLORS["darkpurple"]
-UNSELECTED_CMD_COLOR = PYRAY_COLORS["skyblue"]
-NO_CMD_COLOR = PYRAY_COLORS["lightgray"]
+CURSOR_ON_TIME = getConfigVal(CONFIG, 45, "cursor_on_time")
+CURSOR_OFF_TIME = getConfigVal(CONFIG, 45, "cursor_off_time")
+
+DEFAULT_COLORS = {
+    "background": "black",
+    "border": "darkgray",
+    "input": "lightgray",
+    "no_input": "darkgray",
+    "bar": "darkgray",
+    "dot": "darkgray",
+    "selected_cmd": "lightgray",
+    "unselected_cmd": "gray",
+    "no_cmd": "darkgray"
+}
+
+COLORS = getConfigVal(CONFIG, DEFAULT_COLORS, "colors")
+
+BACKGROUND_COLOR = PYRAY_COLORS[
+    getConfigVal(COLORS, DEFAULT_COLORS["background"], "background")
+]
+
+BORDER_COLOR = PYRAY_COLORS[
+    getConfigVal(COLORS, DEFAULT_COLORS["border"], "border")
+]
+
+INPUT_COLOR = PYRAY_COLORS[
+    getConfigVal(COLORS, DEFAULT_COLORS["input"], "input")
+]
+
+NO_INPUT_COLOR = PYRAY_COLORS[
+    getConfigVal(COLORS, DEFAULT_COLORS["no_input"], "no_input")
+]
+
+BAR_COLOR = PYRAY_COLORS[
+    getConfigVal(COLORS, DEFAULT_COLORS["bar"], "bar")
+]
+
+DOT_COLOR = PYRAY_COLORS[
+    getConfigVal(COLORS, DEFAULT_COLORS["dot"], "dot")
+]
+
+SELECTED_CMD_COLOR = PYRAY_COLORS[
+    getConfigVal(COLORS, DEFAULT_COLORS["selected_cmd"], "selected_cmd")
+]
+
+UNSELECTED_CMD_COLOR = PYRAY_COLORS[
+    getConfigVal(COLORS, DEFAULT_COLORS["unselected_cmd"], "unselected_cmd")
+]
+
+NO_CMD_COLOR = PYRAY_COLORS[
+    getConfigVal(COLORS, DEFAULT_COLORS["no_cmd"], "no_cmd")
+]
 
 # adds char to input_str given by char code in temp
 def add_char_to_cmd(temp: int, input_str: str) -> str:
@@ -271,10 +319,11 @@ def main():
         pr.draw_text_ex(
             menu_font,
             (NO_INPUT_TEXT if input_str == "" else input_str.upper()) +
-            ("_ "," ")[frame_num % 90 > 45],
+            ("_ "," ")[frame_num % (CURSOR_OFF_TIME + CURSOR_ON_TIME) >
+            CURSOR_ON_TIME],
             (LEFT_GAP + INPUT_OFFSET, TOP_GAP),
             FONT_SIZE,
-            0,
+            LETTER_SPACING,
             NO_INPUT_COLOR if input_str == "" else INPUT_COLOR
         )
 
@@ -286,14 +335,15 @@ def main():
             BAR_COLOR
         )
 
-        pr.draw_rectangle(
-            LEFT_GAP + DOT_GAP_LEFT,
-            TOP_GAP + FONT_SIZE + TOTAL_BAR_HEIGHT + DOT_GAP_TOP + 
-            ((FONT_SIZE + CMD_SPACING) * input_num_selected),
-            DOT_SIZE,
-            DOT_SIZE,
-            DOT_COLOR
-        )
+        if len(cmd_list) > 0:
+            pr.draw_rectangle(
+                LEFT_GAP + DOT_GAP_LEFT,
+                TOP_GAP + FONT_SIZE + TOTAL_BAR_HEIGHT + DOT_GAP_TOP +
+                ((FONT_SIZE + CMD_SPACING) * input_num_selected),
+                DOT_SIZE,
+                DOT_SIZE,
+                DOT_COLOR
+            )
 
         for i in range(max_elems + 1):
 
@@ -320,7 +370,7 @@ def main():
                 text,
                 (x, y),
                 FONT_SIZE,
-                0,
+                LETTER_SPACING,
                 color
             )
 
