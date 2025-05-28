@@ -3,6 +3,32 @@ import pyray as pr
 import os as os
 # imports
 
+PYRAY_COLORS = {
+    "darkgray" : pr.DARKGRAY,
+    "maroon" : pr.MAROON,
+    "orange" : pr.ORANGE,
+    "darkgreen" : pr.DARKGREEN,
+    "darkblue" : pr.DARKBLUE,
+    "darkpurple" : pr.DARKPURPLE,
+    "darkbrown" : pr.DARKBROWN,
+    "gray" : pr.GRAY,
+    "red" : pr.RED,
+    "gold" : pr.GOLD,
+    "lime" : pr.LIME,
+    "blue" : pr.BLUE,
+    "violet" : pr.VIOLET,
+    "brown" : pr.BROWN,
+    "lightgray" : pr.LIGHTGRAY,
+    "pink" : pr.PINK,
+    "yellow" : pr.YELLOW,
+    "green" : pr.GREEN,
+    "skyblue" : pr.SKYBLUE,
+    "purple" : pr.PURPLE,
+    "beige" : pr.BEIGE,
+    "black" : pr.BLACK,
+    "white" : pr.WHITE
+}
+
 #config vars
 # a list of all available commands and their aliases and search terms
 COMMANDS: list = [
@@ -14,16 +40,17 @@ COMMANDS: list = [
     ["lo", "libreoffice"],
     ["mc", "minecraft", "minecraft-launcher"],
     ["tty", "", "alacritty"]
-
 ]
+
+CONFIG_LOCATION = "config.json"
 
 FONT_SRC = "startmenu.ttf"
 
 FONT_SIZE = 20
-CMD_SPACING = 2
+CMD_SPACING = 4
 
-SCREEN_WIDTH = 500
-SCREEN_HEIGHT = 300
+SCREEN_WIDTH = 400
+SCREEN_HEIGHT = 200
 
 LEFT_GAP = 14
 TOP_GAP = 14
@@ -35,15 +62,31 @@ TOP_BORDER = 4
 RIGHT_BORDER = 4
 BOTTOM_BORDER = 4
 
-BACKGROUND_COLOR = pr.WHITE
-BORDER_COLOR = pr.LIGHTGRAY
-INPUT_COLOR = pr.DARKPURPLE
-NO_INPUT_COLOR = pr.PURPLE
-BAR_COLOR = pr.LIGHTGRAY
-DOT_COLOR = pr.PURPLE
-SELECTED_CMD_COLOR = pr.DARKPURPLE
-UNSELECTED_CMD_COLOR = pr.SKYBLUE
-NO_CMD_COLOR = pr.LIGHTGRAY
+BAR_TOP_GAP = 4
+BAR_HEIGHT = 4
+BAR_BOTTOM_GAP = 4
+
+TOTAL_BAR_HEIGHT = BAR_TOP_GAP + BAR_BOTTOM_GAP + BAR_HEIGHT
+
+DOT_SIZE = 8
+DOT_GAP_LEFT = 6
+DOT_GAP_TOP = 6
+
+INPUT_OFFSET = 0
+COMMAND_OFFSET = 20
+
+NO_INPUT_TEXT = "Enter text"
+MAX_INPUT_LEN = 18
+
+BACKGROUND_COLOR = PYRAY_COLORS["white"]
+BORDER_COLOR = PYRAY_COLORS["lightgray"]
+INPUT_COLOR = PYRAY_COLORS["darkpurple"]
+NO_INPUT_COLOR = PYRAY_COLORS["purple"]
+BAR_COLOR = PYRAY_COLORS["lightgray"]
+DOT_COLOR = PYRAY_COLORS["purple"]
+SELECTED_CMD_COLOR = PYRAY_COLORS["darkpurple"]
+UNSELECTED_CMD_COLOR = PYRAY_COLORS["skyblue"]
+NO_CMD_COLOR = PYRAY_COLORS["lightgray"]
 
 # adds char to input_str given by char code in temp
 def add_char_to_cmd(temp: int, input_str: str) -> str:
@@ -77,7 +120,7 @@ def sort_cmd_list(input_str: str, cmd_list: list) -> list:
                 temp_sub_at: int = elem[0].find(substr)
                 if not temp_sub_at == -1:
                     longest_substr += len(substr)
-                    if substr_at < substr_at:
+                    if temp_sub_at < substr_at:
                         substr_at = temp_sub_at
 
         if len(temp) == 0:
@@ -184,6 +227,9 @@ def main():
                     if not pr.is_key_pressed(pr.KeyboardKey.KEY_ENTER):
                         input_num_selected = 0 if input_str == "" else 1
 
+        if len(input_str) > MAX_INPUT_LEN:
+            input_str = input_str[:MAX_INPUT_LEN]
+
         cmd_list = sort_cmd_list(input_str, COMMANDS)
 
         if input_str != "":
@@ -192,11 +238,11 @@ def main():
         # maximum num of elems that can be on-screen
         max_elems: int = max(
             (
-                (pr.get_screen_height() - 
-                    (TOP_GAP + (2 * FONT_SIZE) + 10 + BOTTOM_GAP)
-            ) // (FONT_SIZE + CMD_SPACING)),
-            0
-        )
+                (pr.get_screen_height() -
+                    (TOP_GAP + FONT_SIZE * 2 + TOTAL_BAR_HEIGHT + BOTTOM_GAP)
+                ) // (FONT_SIZE + CMD_SPACING)),
+                0
+            )
 
         # offset of how many entries get deleted if max elems is less that input
         # num selected
@@ -224,9 +270,9 @@ def main():
         # draws input
         pr.draw_text_ex(
             menu_font,
-            ("enter text" if input_str == "" else input_str.upper()) +
+            (NO_INPUT_TEXT if input_str == "" else input_str.upper()) +
             ("_ "," ")[frame_num % 90 > 45],
-            (LEFT_GAP, TOP_GAP),
+            (LEFT_GAP + INPUT_OFFSET, TOP_GAP),
             FONT_SIZE,
             0,
             NO_INPUT_COLOR if input_str == "" else INPUT_COLOR
@@ -234,25 +280,26 @@ def main():
 
         pr.draw_rectangle(
             LEFT_GAP,
-            TOP_GAP + FONT_SIZE + 4,
+            TOP_GAP + FONT_SIZE + BAR_TOP_GAP,
             pr.get_screen_width() - LEFT_GAP - RIGHT_GAP,
-            2,
+            BAR_HEIGHT,
             BAR_COLOR
         )
 
         pr.draw_rectangle(
-            LEFT_GAP + 6,
-            TOP_GAP + FONT_SIZE + 16 + 
+            LEFT_GAP + DOT_GAP_LEFT,
+            TOP_GAP + FONT_SIZE + TOTAL_BAR_HEIGHT + DOT_GAP_TOP + 
             ((FONT_SIZE + CMD_SPACING) * input_num_selected),
-            8,
-            8,
+            DOT_SIZE,
+            DOT_SIZE,
             DOT_COLOR
         )
 
         for i in range(max_elems + 1):
 
-            x = LEFT_GAP + 20
-            y = (FONT_SIZE + CMD_SPACING) * i + 10 + FONT_SIZE + TOP_GAP
+            x = LEFT_GAP + COMMAND_OFFSET + DOT_GAP_LEFT
+            y = (FONT_SIZE + CMD_SPACING) * i + TOTAL_BAR_HEIGHT + \
+            FONT_SIZE + TOP_GAP
             text: str = "---"
             color = NO_CMD_COLOR
 
