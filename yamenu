@@ -1,0 +1,325 @@
+#!/usr/bin/python
+import pyray as pr
+import os as os
+# imports
+
+#config vars
+# a list of all available commands and their aliases and search terms
+COMMANDS: list = [
+    ["ff", "firefox"],
+    ["st", "steam"],
+    ["vi", "neovim", "alacritty -T neovim -e nvim"],
+    ["dsc", "discord"],
+    ["obs"],
+    ["lo", "libreoffice"],
+    ["mc", "minecraft", "minecraft-launcher"],
+    ["tty", "", "alacritty"]
+
+]
+
+FONT_SRC = "startmenu.ttf"
+
+FONT_SIZE = 20
+CMD_SPACING = 2
+
+SCREEN_WIDTH = 500
+SCREEN_HEIGHT = 300
+
+LEFT_GAP = 14
+TOP_GAP = 14
+RIGHT_GAP = 4
+BOTTOM_GAP = 14
+
+LEFT_BORDER = 4
+TOP_BORDER = 4
+RIGHT_BORDER = 4
+BOTTOM_BORDER = 4
+
+BACKGROUND_COLOR = pr.WHITE
+BORDER_COLOR = pr.LIGHTGRAY
+INPUT_COLOR = pr.DARKPURPLE
+NO_INPUT_COLOR = pr.PURPLE
+BAR_COLOR = pr.LIGHTGRAY
+DOT_COLOR = pr.PURPLE
+SELECTED_CMD_COLOR = pr.DARKPURPLE
+UNSELECTED_CMD_COLOR = pr.SKYBLUE
+NO_CMD_COLOR = pr.LIGHTGRAY
+
+# adds char to input_str given by char code in temp
+def add_char_to_cmd(temp: int, input_str: str) -> str:
+    if temp == pr.KeyboardKey.KEY_BACKSPACE:
+        # deletes last char if backspace is pressed
+
+        if len(input_str) > 0:
+            input_str = input_str[:len(input_str) - 1]
+
+    elif (pr.KeyboardKey.KEY_A <= temp <= pr.KeyboardKey.KEY_Z) or\
+        pr.KeyboardKey.KEY_ZERO <= temp <= pr.KeyboardKey.KEY_NINE:
+        # otherwise adds char to input_str
+        input_str += chr(temp).lower();
+    return input_str
+
+# sorts a list of list of strings based on how similar an input string is to
+# the first string in each list in the list var
+def sort_cmd_list(input_str: str, cmd_list: list) -> list:
+
+    temp: list = []
+
+    for elem in cmd_list:
+        segment: str = ""
+        longest_substr: int = 0
+        substr_at: int = len(elem[0])
+        for char in input_str:
+            substr: str = ""
+            segment += char
+            for i in range(len(segment)):
+                substr = segment[i:]
+                temp_sub_at: int = elem[0].find(substr)
+                if not temp_sub_at == -1:
+                    longest_substr += len(substr)
+                    if substr_at < substr_at:
+                        substr_at = temp_sub_at
+
+        if len(temp) == 0:
+            temp.append([longest_substr, substr_at, elem])
+        else:
+            for i in range(len(temp)):
+                if (temp[i][0] < longest_substr) or \
+                    ((temp[i][0] == longest_substr) and \
+                    (temp[i][1] > substr_at)) or ( \
+                    (temp[i][0] == longest_substr) and ( \
+                    (temp[i][1] == substr_at) and \
+                    (len(temp[i][2][0]) > len(elem[0])))):
+                    temp.insert(i, [longest_substr, substr_at, elem])
+                    break
+                if i == len(temp) - 1:
+                    temp.append([longest_substr, substr_at, elem])
+
+    for i in range(len(temp)):
+        temp[i] = temp[i][2]
+
+    return temp
+
+def main():
+    input_str: str = ""
+
+    # tracks input time
+    input_time: int = 0
+
+    # what input is selected
+    input_num_selected: int = 0
+    # creates window
+    pr.init_window(SCREEN_WIDTH, SCREEN_HEIGHT, "")
+
+    # all the keys that are down
+    keysDown: list = list()
+
+    # sets target fps and counts frames
+    pr.set_target_fps(60)
+    frame_num: int = 0
+
+    # frame loop
+    while not pr.window_should_close():
+        menu_font = pr.load_font(FONT_SRC)
+
+        # NOTE: drawing start
+        pr.begin_drawing()
+
+        pr.clear_background(BACKGROUND_COLOR)
+
+        # gets next char in queue
+        temp: int = pr.get_key_pressed()
+
+        # loops if char queue is not empty
+        if not temp == 0:
+
+            input_time = frame_num
+
+            # checks if char is pressed
+            while True:
+
+                # makes list of all keys down
+
+                keysDown.append(temp)
+
+                # selects which command to input
+                if temp == pr.KeyboardKey.KEY_DOWN:
+                    input_num_selected += 1
+                elif temp ==pr.KeyboardKey.KEY_UP:
+                    input_num_selected -= 1
+                else:
+                    # adds key to input
+                    input_str = add_char_to_cmd(temp, input_str)
+                    if not pr.is_key_pressed(pr.KeyboardKey.KEY_ENTER):
+                        input_num_selected = 0 if input_str == "" else 1
+
+                # gets next char in queue
+                temp: int = pr.get_key_pressed()
+
+                # ends loop when char queue is empty
+                if temp == 0:
+                    keysDown = list(set(keysDown))
+                    break
+        # logic for repeated key presses
+        elif (((frame_num - input_time) % 3) == 0) and \
+            ((frame_num - input_time) > 30):
+            newList: list = list()
+
+            # filter keys no longer down
+            for temp in keysDown:
+                if pr.is_key_down(temp):
+                    newList.append(temp)
+
+            keysDown = newList
+
+            for temp in keysDown:
+                # selects which command to input
+                if temp == pr.KeyboardKey.KEY_DOWN:
+                    input_num_selected += 1
+                elif temp ==pr.KeyboardKey.KEY_UP:
+                    input_num_selected -= 1
+                else:
+                    #adds to input
+                    input_str = add_char_to_cmd(temp, input_str)
+                    if not pr.is_key_pressed(pr.KeyboardKey.KEY_ENTER):
+                        input_num_selected = 0 if input_str == "" else 1
+
+        cmd_list = sort_cmd_list(input_str, COMMANDS)
+
+        if input_str != "":
+            cmd_list.insert(0, [input_str])
+
+        # maximum num of elems that can be on-screen
+        max_elems: int = max(
+            (
+                (pr.get_screen_height() - 
+                    (TOP_GAP + (2 * FONT_SIZE) + 10 + BOTTOM_GAP)
+            ) // (FONT_SIZE + CMD_SPACING)),
+            0
+        )
+
+        # offset of how many entries get deleted if max elems is less that input
+        # num selected
+        input_offset: int = 0
+
+        # bounds input selection
+        if input_num_selected < 0:
+            input_num_selected = 0
+        elif input_num_selected >= len(cmd_list):
+            input_num_selected = len(cmd_list) - 1
+
+        if input_num_selected > max_elems:
+            cmd_list = cmd_list[(input_num_selected - max_elems):]
+            input_offset = input_num_selected - max_elems
+            input_num_selected -= input_offset
+
+        # prints selected item to stdout
+        if pr.is_key_pressed(pr.KeyboardKey.KEY_ENTER):
+            pr.end_drawing()
+            pr.close_window()
+            print(cmd_list[input_num_selected][
+                len(cmd_list[input_num_selected]) - 1])
+            exit()
+
+        # draws input
+        pr.draw_text_ex(
+            menu_font,
+            ("enter text" if input_str == "" else input_str.upper()) +
+            ("_ "," ")[frame_num % 90 > 45],
+            (LEFT_GAP, TOP_GAP),
+            FONT_SIZE,
+            0,
+            NO_INPUT_COLOR if input_str == "" else INPUT_COLOR
+        )
+
+        pr.draw_rectangle(
+            LEFT_GAP,
+            TOP_GAP + FONT_SIZE + 4,
+            pr.get_screen_width() - LEFT_GAP - RIGHT_GAP,
+            2,
+            BAR_COLOR
+        )
+
+        pr.draw_rectangle(
+            LEFT_GAP + 6,
+            TOP_GAP + FONT_SIZE + 16 + 
+            ((FONT_SIZE + CMD_SPACING) * input_num_selected),
+            8,
+            8,
+            DOT_COLOR
+        )
+
+        for i in range(max_elems + 1):
+
+            x = LEFT_GAP + 20
+            y = (FONT_SIZE + CMD_SPACING) * i + 10 + FONT_SIZE + TOP_GAP
+            text: str = "---"
+            color = NO_CMD_COLOR
+
+            #draws options
+            if i < len(cmd_list):
+                text = cmd_list[i][0]
+                if len(cmd_list[i]) > 1:
+                    if not cmd_list[i][1] == "":
+                        text += f" ({cmd_list[i][1]})"
+
+                if i == input_num_selected:
+                    color = SELECTED_CMD_COLOR 
+                else:
+                    color = UNSELECTED_CMD_COLOR
+
+            pr.draw_text_ex(
+                menu_font,
+                text,
+                (x, y),
+                FONT_SIZE,
+                0,
+                color
+            )
+
+        pr.draw_rectangle(
+            0,
+            0,
+            pr.get_screen_width(),
+            TOP_BORDER,
+            BORDER_COLOR
+        )
+
+        pr.draw_rectangle(
+            0,
+            0,
+            LEFT_BORDER,
+            pr.get_screen_height(),
+            BORDER_COLOR
+        )
+
+        pr.draw_rectangle(
+            0,
+            pr.get_screen_height() - BOTTOM_BORDER,
+            pr.get_screen_width(),
+            BOTTOM_BORDER,
+            BORDER_COLOR
+        )
+
+        pr.draw_rectangle(
+            pr.get_screen_width() - RIGHT_BORDER,
+            0,
+            RIGHT_BORDER,
+            pr.get_screen_height(),
+            BORDER_COLOR
+        )
+
+        # NOTE: drawing end
+        pr.end_drawing()
+
+        input_num_selected += input_offset
+
+        frame_num += 1
+
+        pr.unload_font(menu_font)
+    # ends window
+    pr.close_window()
+
+if __name__ == '__main__':
+    pr.set_trace_log_level(pr.TraceLogLevel.LOG_NONE)
+    main()
