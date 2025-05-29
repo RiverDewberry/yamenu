@@ -49,6 +49,6 @@
     "no_input_text": "enter text",
     "max_input_len": 20,
 
-    "cursor_on_time": 60,
-    "cursor_off_time": 30
+    "cursor_on_time": 45,
+    "cursor_off_time": 45
 }

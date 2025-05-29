@@ -35,7 +35,7 @@ PYRAY_COLORS = {
 }
 
 #config vars
-CONFIG_LOCATION = "config.json"
+CONFIG_LOCATION = os.path.expanduser("~/.config/yamenu/config.json")
 
 CONFIG = {}
 
@@ -52,7 +52,7 @@ COMMANDS = getConfigVal(CONFIG,
         ["in ~/.config/yamenu/config.json", "", ""]
     ], "entries")
 
-FONT_SRC = getConfigVal(CONFIG, "", "font")
+FONT_SRC = os.path.expanduser(getConfigVal(CONFIG, "", "font"))
 
 FONT_SIZE = getConfigVal(CONFIG, 20, "font_size")
 LETTER_SPACING = getConfigVal(CONFIG, 2, "letter_spacing")
