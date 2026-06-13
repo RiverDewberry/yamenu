@@ -1,2 +1,2 @@
 #!/usr/bin/bash
-exec nohup setsid $(./yamenu) > /dev/null
+$(./yamenu) &
